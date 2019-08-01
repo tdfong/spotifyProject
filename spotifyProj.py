@@ -7,6 +7,7 @@ import spotipy.util as util
 import datetime
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 
@@ -211,21 +212,53 @@ while True:
                 topPersonalSongs.to_excel(displayName + "'s TOP SONGS EXCEL.xlsx")
                 print('\nSuccessfully created new top songs EXCEL.')
 
-            showGraph = input('\nWould you like to see the top songs line graph? Y or N: ')
-            if showGraph=='Y':
-                #print(list(topPersonalSongs.columns))
-                uniqueSongs = np.unique(topPersonalSongsIDs)
+        showGraph = input('\nWould you like to see the top songs line graph? Y or N: ')
+        if showGraph=='Y':
+            allTopSongs = pd.read_excel(displayName + "'s TOP SONGS EXCEL.xlsx", index_col=0, sheet_name='IDs')
 
-                f = plt.figure()
-                dateAsInt = [dateToIntConverter(date) for date in topPersonalSongsIDs.columns]
-                for time in topPersonalSongs:
+            uniqueSongs = np.unique(allTopSongs)
 
-                    plt.plot(dateAsInt, data=topPersonalSongs, marker='o', markersize=4)
-                plt.title(displayName + "'s TOP SONGS")
-                plt.xlabel('Duration between data collection in Days')
-                plt.ylabel()
-                plt.legend()
-                pp.savefig(f)
+            f = plt.figure(figsize=(12,12))
+
+            dateAsInt = [dateToIntConverter(date) for date in allTopSongs.columns]
+            minDate = min(dateAsInt)
+            dateAsInt = [item - minDate for item in dateAsInt]
+            #dateDictionary = dict(zip(allTopSongs.columns, dateAsInt - min(dateAsInt)))
+
+            for songID in uniqueSongs:
+                songName = spotifyObject.track(songID)['name']
+                rankList = []
+                for column in allTopSongs.columns:
+                    try:
+                        rankList.append(-(list(allTopSongs[column].values).index(songID) - 50))
+                        print(songName)
+                    except:
+                        rankList.append(None)
+                        print('didnt work')
+                sns.lineplot(x=dateAsInt, y=rankList, label=songName, marker='o')
+            plt.title('Top Songs Ranks/Movement')
+            plt.legend(frameon=False, fontsize=4, loc='upper right')
+            plt.show()
+            break
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            plt.title(displayName + "'s TOP SONGS")
+            plt.xlabel('Duration between data collection in Days')
+            plt.ylabel()
+            plt.legend()
+            pp.savefig(f)
 
     if choice=='4':
         numArtists = int(input('How many of your top artists do you want to see? '))
